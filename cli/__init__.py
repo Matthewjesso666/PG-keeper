@@ -1,1 +1,1 @@
-"""Command line interface helpers."""
+# CLI package.

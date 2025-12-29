@@ -1,0 +1,28 @@
+Subject: Appeal for Workers' Compensation Claim {{ case_id }}
+
+{{ tone_profile.greeting }} {{ recipient_name|default("to whom it may concern") }},
+
+I am writing to appeal the decision regarding claim {{ case_id }} for {{ claimant_name }}. The decision dated {{ decision_date|default("the referenced decision date") }} has a significant impact on the case outcome.
+
+{{ tone_profile.purpose }}
+
+Key facts for consideration:
+{% for fact in facts %}
+- {{ fact }}
+{% else %}
+- (No specific facts were provided.)
+{% endfor %}
+
+Insights from the analysis:
+{% for insight in insights %}
+- {{ insight }}
+{% else %}
+- (No additional insights were provided.)
+{% endfor %}
+
+Requested action:
+{{ requested_action }}
+
+{{ tone_profile.closing }}
+
+{{ signature }}

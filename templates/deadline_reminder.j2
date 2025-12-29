@@ -1,0 +1,18 @@
+Subject: Upcoming deadline on {{ deadline }}
+
+{{ tone_profile.greeting }} {{ recipient_name|default("team") }},
+
+This is a reminder of the approaching deadline on {{ deadline }} for {{ deliverable|default("the requested items") }}.
+
+Prior requests:
+{% for request in previous_requests %}
+- {{ request }}
+{% else %}
+- (No prior requests were logged.)
+{% endfor %}
+
+Please confirm receipt and advise if additional information is needed.
+
+{{ tone_profile.closing }}
+
+{{ signature }}

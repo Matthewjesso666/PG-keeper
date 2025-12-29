@@ -1,0 +1,19 @@
+Subject: Evidence Request for Claim {{ case_id }}
+
+{{ tone_profile.greeting }} {{ recipient_name|default("team") }},
+
+I am requesting the following documents to clarify the record for claim {{ case_id }}:
+{% for item in documents_requested %}
+- {{ item }}
+{% else %}
+- (No document list was provided.)
+{% endfor %}
+
+Context for this request:
+{{ context_summary }}
+
+Please provide the documents by {{ deadline|default("the soonest available date") }} to support timely review.
+
+{{ tone_profile.closing }}
+
+{{ signature }}

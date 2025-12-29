@@ -1,14 +1,8 @@
-"""PG Keeper: WCB case assistant utilities."""
+"""PG-keeper case management agent."""
 
 __all__ = [
     "config",
-    "storage",
-    "gmail_client",
-    "drive_client",
-    "categorizer",
-    "embeddings",
+    "models",
+    "indexer",
     "pipeline",
-    "timeline",
-    "voice_io",
-    "cli",
 ]

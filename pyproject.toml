@@ -1,21 +1,36 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "pg-keeper"
 version = "0.1.0"
-description = "Workers' Compensation Board case agent"
-authors = [{name = "PG-keeper"}]
+description = "CLI and API utilities for managing and drafting Workers' Compensation Board case materials."
+authors = [{name = "PG Keeper", email = ""}]
+readme = "README.md"
+license = {text = "MIT"}
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+  "typer>=0.12",
+  "rich>=13.0",
+  "pydantic>=2.6",
+  "fastapi>=0.109",
+  "uvicorn>=0.23",
+  "chromadb>=0.4",
+  "faiss-cpu>=1.7",
+]
 
 [project.optional-dependencies]
-google = [
-    "google-api-python-client>=2.129.0",
-    "google-auth-httplib2>=0.2.0",
-    "google-auth-oauthlib>=1.1.0",
-]
-openai = ["openai>=1.42.0"]
-pdf = ["PyPDF2>=3.0.0"]
-dev = ["pytest>=7.4"]
+api = ["python-multipart>=0.0.9"]
 
-[tool.pytest.ini_options]
-pythonpath = ["."]
-addopts = "-q"
+[project.scripts]
+pg-keeper = "pg_keeper.cli:main"
+pg-keeper-ingest = "pg_keeper.cli:pg_keeper_ingest"
+pg-keeper-chat = "pg_keeper.cli:pg_keeper_chat"
+pg-keeper-draft = "pg_keeper.cli:pg_keeper_draft"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

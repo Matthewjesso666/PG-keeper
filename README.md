@@ -1,48 +1,55 @@
 # PG-keeper
 
-A Python agent that keeps a Workers' Compensation Board (WCB) case organized by
-pulling correspondence and files, indexing them, delegating analysis to
-specialized GPT modules, and drafting responses.
+A lightweight toolkit to ingest Workers' Compensation Board case materials, chat with context, and draft responses via CLI or API.
 
 ## Features
-- Sync adapters for Gmail, Google Drive, and a local **case vault** folder (PDF, TXT, MD).
-- Keyword-based categorization and indexing for fast triage.
-- Specialist analyzers (Loophole Finder, Fairness Review, Appeal Strategist,
-  Dirty Tactics Defender, Case Memory/Vault) powered by an LLM abstraction.
-- Response drafter that rolls up recommended actions for the claims manager.
-- Offline-friendly defaults using an echo LLM stub; OpenAI client available when
-  credentials are configured.
+- Ingest local files or directories into Chroma/FAISS
+- Chat over indexed context and view retrieved snippets
+- Draft concise notes or replies with configurable tone/length
+- Optional FastAPI service exposing `/chat` and `/draft`
 
-## Quickstart
-1. Create a virtual environment and install optional dependencies if you plan to
-   talk to Google or OpenAI APIs:
-   ```bash
-   pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib openai PyPDF2
-   ```
-2. Run the agent in offline mode (no external API calls) against a local vault:
-   ```bash
-   python -m pg_keeper.main --case-vault /path/to/case_vault --offline --dry-run
-   ```
-3. To enable Gmail/Drive collection, supply your OAuth credentials JSON:
-   ```bash
-   python -m pg_keeper.main --google-credentials credentials.json --case-vault /path/to/case_vault --dry-run
-   ```
-
-## Tests
-Run the test suite with:
+## Installation
 ```bash
-pytest
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .[api]
 ```
 
-## Project Structure
-- `pg_keeper/config.py` – configuration dataclasses for Google auth and vaults.
-- `pg_keeper/data_sources/` – connectors for Gmail, Drive, and local vault files.
-- `pg_keeper/indexer.py` – keyword-based classifier and indexer.
-- `pg_keeper/analysis/specialists.py` – specialized GPT roles built on the LLM abstraction.
-- `pg_keeper/pipeline.py` – orchestrates ingestion, analysis, and drafting.
-- `pg_keeper/main.py` – CLI entry point.
+## CLI Usage
+```bash
+pg-keeper-ingest ./case-vault
+pg-keeper-chat "What deadlines are mentioned?"
+pg-keeper-draft "Draft an appeal note summarizing the latest decision"
+```
 
-## Notes
-- External imports are lazy to keep the package importable without Google or OpenAI installed.
-- The agent defaults to `dry_run` to avoid sending or filing anything; wire your own
-  outbound channel if you want to deliver drafted responses automatically.
+Set environment variables to configure behavior:
+- `PG_KEEPER_DATA_DIR` to control where data is stored (default `./data`)
+- `PG_KEEPER_CHROMA_URL` to point at a remote Chroma server (default in-process)
+- `PG_KEEPER_API_KEY` to protect the API (optional)
+- `PG_KEEPER_MODEL` to set the model name used in generated text
+
+## API Usage
+Start the API locally:
+```bash
+uvicorn api.app:app --reload
+```
+
+Make requests with an API key if configured:
+```bash
+curl -X POST http://localhost:8000/chat \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $PG_KEEPER_API_KEY" \
+  -d '{"query": "List missing evidence", "collection": "case-vault", "top_k": 3}'
+
+curl -X POST http://localhost:8000/draft \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "Draft follow-up email to adjuster", "tone": "direct", "length": "medium"}'
+```
+
+## Docker
+Build and run the API with Chroma via Docker Compose:
+```bash
+docker-compose up --build
+```
+
+This starts Chroma on port 8001 and the API on port 8000 with a shared `./data` volume.

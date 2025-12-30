@@ -1,0 +1,34 @@
+google:
+  client_secret_file: "config/client_secret.json"
+  token_file: "config/token.json"
+  # Both Gmail and Drive scopes are included to simplify a single OAuth flow.
+  scopes:
+    - "https://www.googleapis.com/auth/gmail.readonly"
+    - "https://www.googleapis.com/auth/drive.readonly"
+  # Primary user to impersonate; adjust if using delegated credentials.
+  user: "me"
+
+gmail:
+  query: '"WCB" OR "Workers Compensation"'
+  # RFC3339 timestamp to limit to recent messages. Leave blank to fetch everything.
+  history_start: ""
+
+drive:
+  folder_ids:
+    - "root"  # Replace with the Google Drive folder IDs that hold WCB documents.
+
+vault:
+  path: "data/vault"  # Local folder containing PDFs or scans for the case vault.
+
+ingestion:
+  index_dir: "data/index"
+  # JSONL manifest where dedup hashes are stored to prevent reprocessing.
+  manifest_path: "data/index/manifest.jsonl"
+  schedule_minutes: 60
+  tagger:
+    embedding_model: "sentence-transformers/all-MiniLM-L6-v2"
+    keyword_entities:
+      hearing: ["hearing", "tribunal", "adjudication"]
+      payment: ["payment", "cheque", "deposit"]
+      medical: ["physio", "clinic", "doctor", "assessment"]
+      deadline: ["deadline", "due", "submission", "appeal"]

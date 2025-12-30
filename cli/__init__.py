@@ -1,1 +1,2 @@
-# CLI package.
+"""CLI entrypoints."""
+

@@ -1,64 +1,116 @@
-"""Command-line entrypoints for PG Keeper."""
+"""CLI helpers for enforcing profile-based safety policies."""
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
+from typing import Dict, Tuple
 
-from datetime import datetime
-
-from .config import load_config
-from .pipeline import IngestionPipeline
-from .timeline import Deadline, Timeline
+from pg_keeper.audit.logging import AuditLogger, AuditRecord
+from pg_keeper.safety.filters import SafetyPolicyError, evaluate_policy_and_redact
 
 
-def ingest_demo(text_file: Path, attachments: list[Path]) -> None:
-    config = load_config()
-    pipeline = IngestionPipeline(config)
-    text = text_file.read_text(encoding="utf-8")
-    pipeline.process_item(text=text, attachments=attachments, subject=text_file.stem, source=str(text_file))
-    print(f"Ingested {text_file}")
+DEFAULT_CONFIG = Path(__file__).resolve().parent.parent / "config" / "profiles.yaml"
 
 
-def show_deadlines() -> None:
-    config = load_config()
-    timeline = Timeline(config.storage_root)
-    for deadline in timeline.list_all():
-        print(f"{deadline.due.date()} - {deadline.title} ({deadline.notes or ''})")
+def _load_config_text(path: Path) -> Dict:
+    text = path.read_text()
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        # Fallback for environments where PyYAML is unavailable. The configuration
+        # is authored in JSON-compatible YAML, so a lightweight parser keeps the
+        # dependency surface small.
+        try:
+            import yaml  # type: ignore
+
+            return yaml.safe_load(text)
+        except Exception as exc:  # pragma: no cover - defensive fallback
+            raise RuntimeError(f"Unable to parse configuration at {path}: {exc}") from exc
 
 
-def add_deadline(title: str, due: str, notes: str | None) -> None:
-    config = load_config()
-    timeline = Timeline(config.storage_root)
-    timeline.add(Deadline(title=title, due=datetime.fromisoformat(due), notes=notes))
-    print("Deadline added.")
+def load_profiles(config_path: Path | None = None) -> Dict[str, Dict]:
+    path = Path(config_path) if config_path else DEFAULT_CONFIG
+    data = _load_config_text(path) or {}
+    return data.get("profiles", {})
 
 
-def main() -> None:
+def get_profile(name: str, config_path: Path | None = None) -> Dict:
+    profiles = load_profiles(config_path)
+    if name not in profiles:
+        available = ", ".join(sorted(profiles)) or "<none>"
+        raise KeyError(f"Unknown profile '{name}'. Available profiles: {available}")
+    return profiles[name]
+
+
+def send_draft(
+    profile_name: str,
+    content: str,
+    *,
+    config_path: Path | None = None,
+    source_id: str = "cli",
+    audit_logger: AuditLogger | None = None,
+    redaction_override: bool | None = None,
+) -> Tuple[str, AuditRecord, AuditLogger]:
+    settings = get_profile(profile_name, config_path)
+    logger = audit_logger or AuditLogger()
+
+    sanitized = evaluate_policy_and_redact(content, settings, redaction_override=redaction_override)
+
+    record = logger.log_action(
+        action="send_draft",
+        input_data={"profile": profile_name, "content": content},
+        output_data={"profile": profile_name, "content": sanitized},
+        source_id=source_id,
+    )
+    return sanitized, record, logger
+
+
+def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="PG Keeper CLI")
-    subparsers = parser.add_subparsers(dest="command")
+    parser.add_argument("profile", help="Profile to use for safety enforcement")
+    parser.add_argument("content", help="Draft content to send")
+    parser.add_argument(
+        "--source-id",
+        default="cli",
+        help="Identifier for the source initiating the action",
+    )
+    parser.add_argument(
+        "--config",
+        type=Path,
+        default=DEFAULT_CONFIG,
+        help="Path to profiles configuration",
+    )
+    parser.add_argument(
+        "--no-redact",
+        dest="redact",
+        action="store_false",
+        help="Disable redaction even if the profile requires it",
+    )
+    parser.set_defaults(redact=None)
+    return parser
 
-    ingest_parser = subparsers.add_parser("ingest", help="Ingest a text file and optional attachments")
-    ingest_parser.add_argument("text", type=Path, help="Path to text or email body file")
-    ingest_parser.add_argument("attachments", nargs="*", type=Path, help="Attachment paths")
 
-    deadline_parser = subparsers.add_parser("deadline", help="Add a deadline")
-    deadline_parser.add_argument("title", help="Title of the deadline")
-    deadline_parser.add_argument("due", help="Due date ISO format (YYYY-MM-DD)")
-    deadline_parser.add_argument("--notes", help="Optional notes")
+def main(argv: list[str] | None = None) -> int:
+    parser = build_parser()
+    args = parser.parse_args(argv)
 
-    subparsers.add_parser("deadlines", help="List deadlines")
+    try:
+        sanitized, record, _ = send_draft(
+            args.profile,
+            args.content,
+            config_path=args.config,
+            source_id=args.source_id,
+            redaction_override=args.redact,
+        )
+    except SafetyPolicyError as exc:  # pragma: no cover - exercised in integration test
+        parser.error(str(exc))
+        return 1
 
-    args = parser.parse_args()
-
-    if args.command == "ingest":
-        ingest_demo(args.text, args.attachments)
-    elif args.command == "deadline":
-        add_deadline(args.title, args.due, args.notes)
-    elif args.command == "deadlines":
-        show_deadlines()
-    else:
-        parser.print_help()
+    print(sanitized)
+    print(f"logged at {record.timestamp.isoformat()} from {record.source_id}")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

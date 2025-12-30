@@ -1,0 +1,20 @@
+{"profiles": {
+  "default": {
+    "allow_pii": false,
+    "redact_before_send": true,
+    "require_policy_check": true,
+    "sources": ["email", "drive"]
+  },
+  "reviewer": {
+    "allow_pii": true,
+    "redact_before_send": false,
+    "require_policy_check": true,
+    "sources": ["manual"]
+  },
+  "sanitized": {
+    "allow_pii": false,
+    "redact_before_send": true,
+    "require_policy_check": true,
+    "sources": ["vault"]
+  }
+}}

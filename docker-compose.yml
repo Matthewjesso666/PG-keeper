@@ -1,0 +1,28 @@
+version: "3.9"
+services:
+  chroma:
+    image: ghcr.io/chroma-core/chroma:latest
+    ports:
+      - "8001:8000"
+    environment:
+      - ALLOW_RESET=TRUE
+    volumes:
+      - chroma_data:/chroma/chroma
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    environment:
+      - PG_KEEPER_CHROMA_URL=chroma:8000
+      - PG_KEEPER_API_KEY=${PG_KEEPER_API_KEY:-}
+      - PG_KEEPER_DATA_DIR=/data
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/data
+    depends_on:
+      - chroma
+
+volumes:
+  chroma_data:

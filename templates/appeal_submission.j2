@@ -1,0 +1,34 @@
+{{ disclaimer }}
+
+Case: {{ case_name }}
+Mode: {{ "Factual-Only" if factual_only else "Standard" }}
+
+Purpose: Appeal / Review Submission (skeleton)
+
+Summary of facts:
+{% if timeline %}
+{% for entry in timeline %}- {{ entry.event_date }} — {{ entry.description }}
+{% endfor %}
+{% else %}- Timeline not provided yet.
+{% endif %}
+
+Issues raised (neutral language):
+{% if issues %}
+{% for issue in issues %}- {{ issue.title }} — {{ issue.detail }}
+{% endfor %}
+{% else %}- Issues list not provided yet.
+{% endif %}
+
+Policy references (local only):
+{% for snippet in policy_snippets %}- {{ snippet }}
+{% endfor %}
+
+Requests:
+- Please review the facts above.
+- Please provide any clarifications needed; I will supply missing items promptly.
+- I am seeking a fair, timely review based on the information provided.
+
+Notes:
+- This helper does not give legal advice.
+- Language is intentionally neutral: "I am concerned that..." / "It appears that..."
+- No personal banking or SIN details are requested.

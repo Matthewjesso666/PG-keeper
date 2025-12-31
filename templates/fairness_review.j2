@@ -1,0 +1,34 @@
+{{ disclaimer }}
+
+Case: {{ case_name }}
+Mode: {{ "Factual-Only" if factual_only else "Standard" }}
+
+Purpose: Fairness Review Letter (skeleton)
+
+Context summary:
+{% if timeline %}
+{% for entry in timeline %}- {{ entry.event_date }} — {{ entry.description }}
+{% endfor %}
+{% else %}- Timeline not provided yet.
+{% endif %}
+
+Fairness concerns:
+{% if issues %}
+{% for issue in issues %}- {{ issue.title }} — {{ issue.detail }}
+{% endfor %}
+{% else %}- Issues list not provided yet.
+{% endif %}
+
+Local policy references:
+{% for snippet in policy_snippets %}- {{ snippet }}
+{% endfor %}
+
+Requests (neutral):
+- Please review the steps taken to date and confirm that the process aligns with policy.
+- If something seems missing, I am ready to provide it promptly.
+- I appreciate a clear explanation of next steps and timelines.
+
+Notes:
+- This is not legal advice.
+- No accusations are made; statements use careful language ("It appears…", "I am concerned…").
+- No medical opinions or diagnoses are included.

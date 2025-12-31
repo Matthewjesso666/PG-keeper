@@ -99,7 +99,9 @@ def refresh_case(  # pragma: no cover - integration focused
     vault_loader = VaultLoader(settings.case_vault_path)
 
     gmail_messages = gmail_client.fetch_recent_messages(query="subject:WCB OR WCB", max_results=50)
-    drive_files = drive_client.list_case_files(folder_id="root")
+    drive_files = []
+    for folder_id in settings.drive_folder_ids:
+        drive_files.extend(drive_client.list_case_files(folder_id=folder_id))
     vault_paths = [str(path) for path in vault_loader.discover_files()]
 
     documents = [

@@ -8,6 +8,8 @@ from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema import Document
 
+from app.prompts import build_base_system_prompt
+
 
 @dataclass
 class AgentResult:
@@ -23,6 +25,7 @@ class BaseCaseAgent:
 
     def __init__(self, *, model_name: str = "gpt-4o-mini") -> None:
         self.llm = ChatOpenAI(model_name=model_name)
+        self.base_system_prompt = build_base_system_prompt()
 
     def run(self, context: List[Document]) -> AgentResult:  # pragma: no cover - orchestrated externally
         raise NotImplementedError
@@ -32,7 +35,7 @@ class BaseCaseAgent:
             [
                 (
                     "system",
-                    instructions,
+                    f"{self.base_system_prompt}\n\n## ROLE-SPECIFIC INSTRUCTIONS\n{instructions}",
                 ),
                 (
                     "human",

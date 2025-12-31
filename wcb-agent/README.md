@@ -33,6 +33,7 @@ All configuration lives in `.env`. At minimum, provide:
 - `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` (OAuth client credentials)
 - `GOOGLE_REFRESH_TOKEN` (authorized for Gmail and Drive scopes)
 - `CASE_VAULT_PATH` (local folder containing PDFs/scans)
+- `GOOGLE_DRIVE_FOLDER_IDS` (optional, comma-separated list of Drive folder IDs to scan; defaults to `root`)
 
 ## Project layout
 - `app/main.py` – FastAPI entrypoint exposing health and data refresh endpoints.

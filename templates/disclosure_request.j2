@@ -1,0 +1,27 @@
+{{ disclaimer }}
+
+Case: {{ case_name }}
+Mode: {{ "Factual-Only" if factual_only else "Standard" }}
+
+Purpose: Disclosure Request Letter (skeleton)
+
+Facts prompting this request:
+{% if timeline %}
+{% for entry in timeline %}- {{ entry.event_date }} — {{ entry.description }}
+{% endfor %}
+{% else %}- Timeline not provided yet.
+{% endif %}
+
+Information requested:
+- Please share a copy of the full claim file, including decisions, notes, and correspondence.
+- Please include wage calculations, return-to-work planning notes, and any medical summaries on file.
+- If some items cannot be shared, please confirm what is available and the expected delivery date.
+
+Local policy references:
+{% for snippet in policy_snippets %}- {{ snippet }}
+{% endfor %}
+
+Notes:
+- This helper does not provide legal advice.
+- Language is neutral and factual.
+- No sensitive personal banking or SIN details are requested.

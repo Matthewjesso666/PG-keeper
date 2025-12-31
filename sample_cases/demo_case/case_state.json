@@ -1,0 +1,40 @@
+{
+  "case_name": "demo_case",
+  "base_path": "sample_cases/demo_case",
+  "created_at": "2024-01-01T00:00:00",
+  "updated_at": "2024-01-01T00:00:00",
+  "factual_only": true,
+  "documents": [
+    {
+      "id": "sample-doc-1",
+      "filename": "decision.txt",
+      "doc_type": "decision",
+      "imported_at": "2024-01-01T00:00:00",
+      "original_path": "sample_cases/demo_case/imports/decision.txt",
+      "stored_path": "sample_cases/demo_case/imports/decision.txt",
+      "extracted_text_path": "sample_cases/demo_case/notes/extracted/decision_extracted.txt",
+      "notes": null,
+      "status": "text extracted"
+    }
+  ],
+  "timeline": [
+    {
+      "event_date": "2024-05-01",
+      "description": "Medical leave approved",
+      "source_document_id": "sample-doc-1"
+    },
+    {
+      "event_date": "2024-06-10",
+      "description": "Wage loss benefits recalculated",
+      "source_document_id": "sample-doc-1"
+    }
+  ],
+  "issues": [
+    {
+      "title": "Clarify wage recalculation",
+      "detail": "Request breakdown of wage loss calculation dated June 10.",
+      "related_document_id": "sample-doc-1"
+    }
+  ],
+  "drafts": []
+}

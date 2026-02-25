@@ -1,21 +1,37 @@
-"""Vector store utilities for organizing case documents."""
+"""Vector-like store utilities for organizing case documents."""
 from __future__ import annotations
 
-from typing import List, Sequence
+from dataclasses import dataclass
+from typing import Iterable, List, Sequence
 
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.schema import Document
-from langchain.vectorstores import FAISS
-
-
-def build_index(documents: Sequence[Document]) -> FAISS:
-    """Create a FAISS vector index from LangChain documents."""
-
-    embeddings = OpenAIEmbeddings()
-    return FAISS.from_documents(list(documents), embedding=embeddings)
+from langchain_core.documents import Document
 
 
-def similarity_search(store: FAISS, query: str, k: int = 5) -> List[Document]:
-    """Run a similarity search over the vector store."""
+@dataclass
+class InMemoryCaseIndex:
+    """Simple lexical index to avoid heavy external vector dependencies."""
+
+    documents: List[Document]
+
+    def similarity_search(self, query: str, k: int = 5) -> List[Document]:
+        """Return top-k documents ranked by token overlap with query text."""
+
+        query_terms = set(query.lower().split())
+        ranked = sorted(
+            self.documents,
+            key=lambda doc: len(query_terms.intersection(set(doc.page_content.lower().split()))),
+            reverse=True,
+        )
+        return ranked[:k]
+
+
+def build_index(documents: Sequence[Document]) -> InMemoryCaseIndex:
+    """Create a searchable in-memory index from case documents."""
+
+    return InMemoryCaseIndex(documents=list(documents))
+
+
+def similarity_search(store: InMemoryCaseIndex, query: str, k: int = 5) -> List[Document]:
+    """Run a similarity search over the case index."""
 
     return store.similarity_search(query, k=k)
